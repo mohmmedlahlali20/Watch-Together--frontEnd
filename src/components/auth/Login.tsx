@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, Container, Stack, TextField, Typography } from '@mui/material';
+import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../redux/store/store.tsx';
 import path from '../../axios/axios.ts';
@@ -45,102 +45,77 @@ function Login() {
     };
 
     return (
-        <div className="bg-gradient-to-r from-teal-500 to-blue-500 min-h-screen flex justify-center items-center">
-            <Container maxWidth="xs">
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        padding: 4,
-                        borderRadius: 4,
-                        boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.1)',
-                        backgroundColor: 'white',
-                    }}
-                >
-                    <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 600, color: '#333' }}>
-                        Login
-                    </Typography>
+        <Box
+            sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '100vh',
+                backgroundColor: '#f5f5f5', // Light background color
+            }}
+        >
+            <Box
+                sx={{
+                    width: '100%',
+                    maxWidth: 400,
+                    p: 4,
+                    borderRadius: 2,
+                    boxShadow: 3,
+                    backgroundColor: 'white',
+                }}
+            >
+                <Typography variant="h5" align="center" gutterBottom sx={{ fontWeight: 600 }}>
+                    Login
+                </Typography>
 
-                    <form onSubmit={handleLogin} style={{ width: '100%' }}>
-                        <Stack spacing={3}>
-                            <TextField
-                                label="Email"
-                                variant="outlined"
-                                fullWidth
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                error={!!emailError}
-                                helperText={emailError}
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '10px',
-                                    },
-                                    '& .MuiInputLabel-root': {
-                                        fontWeight: 600,
-                                        color: '#333',
-                                    },
-                                    '& .MuiOutlinedInput-root.Mui-focused fieldset': {
-                                        borderColor: '#0288d1',
-                                    },
-                                }}
-                            />
+                <form onSubmit={handleLogin}>
+                    <Stack spacing={3}>
+                        <TextField
+                            label="Email"
+                            variant="outlined"
+                            fullWidth
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            error={!!emailError}
+                            helperText={emailError}
+                        />
 
-                            <TextField
-                                label="Password"
-                                variant="outlined"
-                                fullWidth
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                error={!!passwordError}
-                                helperText={passwordError}
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '10px',
-                                    },
-                                    '& .MuiInputLabel-root': {
-                                        fontWeight: 600,
-                                        color: '#333',
-                                    },
-                                    '& .MuiOutlinedInput-root.Mui-focused fieldset': {
-                                        borderColor: '#0288d1',
-                                    },
-                                }}
-                            />
+                        <TextField
+                            label="Password"
+                            variant="outlined"
+                            fullWidth
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            error={!!passwordError}
+                            helperText={passwordError}
+                        />
 
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                fullWidth
-                                type="submit"
-                                sx={{
-                                    borderRadius: '10px',
-                                    fontWeight: 600,
-                                    padding: '12px 0',
-                                    textTransform: 'none',
-                                    backgroundColor: '#0288d1',
-                                    '&:hover': {
-                                        backgroundColor: '#0277bd',
-                                    },
-                                }}
-                                disabled={loading}
-                            >
-                                {loading ? 'Logging in...' : 'Login'}
-                            </Button>
+                        <Button
+                            variant="contained"
+                            fullWidth
+                            type="submit"
+                            disabled={loading}
+                            sx={{
+                                backgroundColor: '#6200ea',
+                                '&:hover': { backgroundColor: '#3700b3' },
+                                padding: '12px 0',
+                                textTransform: 'none',
+                            }}
+                        >
+                            {loading ? 'Logging in...' : 'Login'}
+                        </Button>
 
-                            {error && (
-                                <Typography variant="body2" color="error" align="center" sx={{ marginTop: 2 }}>
-                                    {error}
-                                </Typography>
-                            )}
-                        </Stack>
-                    </form>
-                </Box>
-            </Container>
-        </div>
+                        {error && (
+                            <Typography variant="body2" color="error" align="center" sx={{ mt: 2 }}>
+                                {error}
+                            </Typography>
+                        )}
+                    </Stack>
+                </form>
+            </Box>
+        </Box>
     );
 }
 
