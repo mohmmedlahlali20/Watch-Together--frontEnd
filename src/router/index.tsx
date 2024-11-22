@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Layout } from "../layout";
-import { Login, Register } from "../components";
+import { Login, Register, CreateRoom } from "../components";
 
 const router = createBrowserRouter([
     {
@@ -16,6 +16,10 @@ const router = createBrowserRouter([
     {
         path: "/register",
         element: <Register />,
+    },
+    {
+        path: "/create",
+        element: <CreateRoom />,
     },
 ]);
 
