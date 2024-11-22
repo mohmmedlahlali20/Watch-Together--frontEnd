@@ -1,7 +1,58 @@
 import React, { useState } from 'react';
 import { TextField, Button, Container, Typography, Box, Stack } from '@mui/material';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { registerRequest, registerSuccess, registerFailure } from '../../redux/slice/auth/authSlice.ts';
+import path from '../../axios/axios.ts';
 
 const Register: React.FC = () => {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const [firstNameError, setFirstNameError] = useState('');
+    const [lastNameError, setLastNameError] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+
+    const handleRegister = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setFirstNameError('');
+        setLastNameError('');
+        setEmailError('');
+        setPasswordError('');
+
+        if (!firstName) {
+            setFirstNameError('First Name is required');
+            return;
+        }
+        if (!lastName) {
+            setLastNameError('Last Name is required');
+            return;
+        }
+        if (!email) {
+            setEmailError('Email is required');
+            return;
+        }
+        if (!password) {
+            setPasswordError('Password is required');
+            return;
+        }
+
+        dispatch(registerRequest());
+
+        try {
+            const response = await path.post('/auth/register', { firstName, lastName, email, password });
+            dispatch(registerSuccess(response.data));
+            navigate('/login');
+        } catch (err: any) {
+            dispatch(registerFailure(err.message));
+        }
+    };
 
     return (
         <div className="bg-gradient-to-r from-teal-500 to-blue-500 min-h-screen flex justify-center items-center">
@@ -22,12 +73,16 @@ const Register: React.FC = () => {
                         Create Account
                     </Typography>
 
-                    <form style={{ width: '100%' }}>
+                    <form onSubmit={handleRegister} style={{ width: '100%' }}>
                         <Stack spacing={3}>
                             <TextField
                                 label="First Name"
                                 variant="outlined"
                                 fullWidth
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                error={!!firstNameError}
+                                helperText={firstNameError}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         borderRadius: '10px',
@@ -46,6 +101,10 @@ const Register: React.FC = () => {
                                 label="Last Name"
                                 variant="outlined"
                                 fullWidth
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                error={!!lastNameError}
+                                helperText={lastNameError}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         borderRadius: '10px',
@@ -65,6 +124,10 @@ const Register: React.FC = () => {
                                 variant="outlined"
                                 fullWidth
                                 type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                error={!!emailError}
+                                helperText={emailError}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         borderRadius: '10px',
@@ -84,6 +147,10 @@ const Register: React.FC = () => {
                                 variant="outlined"
                                 fullWidth
                                 type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                error={!!passwordError}
+                                helperText={passwordError}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         borderRadius: '10px',
@@ -102,6 +169,7 @@ const Register: React.FC = () => {
                                 variant="contained"
                                 color="primary"
                                 fullWidth
+                                type="submit"
                                 sx={{
                                     borderRadius: '10px',
                                     fontWeight: 600,
