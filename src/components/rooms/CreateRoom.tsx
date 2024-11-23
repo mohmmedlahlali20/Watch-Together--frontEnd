@@ -8,10 +8,12 @@ import path from '../../axios/axios';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import Swal from 'sweetalert2';
+import { Select, MenuItem, Checkbox, ListItemText } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
 
 const CreateRoom = () => {
     const dispatch = useDispatch();
-    const token = Cookies.get('auth_token');
+    const token = Cookies.get('token');
     const user = jwtDecode(token);
     const userId = user.userId;
 
@@ -29,11 +31,15 @@ const CreateRoom = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const isValid = formData.videos.every(video => video.title && video.url);
+        const isValid = formData.videos.every(video => {
+            const urlPattern = /^(https?:\/\/[^\s$.?#].[^\s]*)$/;
+            return video.title && urlPattern.test(video.url);
+        });
+
         if (!isValid) {
             Swal.fire({
                 title: 'Error!',
-                text: 'Please fill all video fields (title and URL).',
+                text: 'Please fill all video fields (title and URL) with valid information.',
                 icon: 'error',
                 confirmButtonText: 'OK',
             });
@@ -86,10 +92,19 @@ const CreateRoom = () => {
         });
     };
 
+    const handleParticipantsChange = (e: SelectChangeEvent<typeof formData.participants>) => {
+        const { target: { value } } = e;
+        setFormData({
+            ...formData,
+            participants: typeof value === 'string' ? value.split(',') : value,
+        });
+    };
+
     useEffect(() => {
         const fetchUsers = async () => {
             try {
                 const response = await path.get('/User/Users');
+                setUsers(response.data);
                 dispatch(setUsers(response.data));
             } catch (error) {
                 console.error('Error fetching users:', error);
@@ -100,52 +115,53 @@ const CreateRoom = () => {
     }, [dispatch]);
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-600 to-indigo-900 container mx-auto">
-            <div className="bg-opacity-60 backdrop-blur-md rounded-xl shadow-lg p-8 w-full max-w-3xl">
-                <h1 className="text-4xl font-bold text-white text-center mb-6">Create a New Room</h1>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <TextField
-                            fullWidth
-                            label="Room Name"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            variant="outlined"
-                            className="bg-white rounded-lg text-black shadow-md focus:ring-2 focus:ring-purple-500"
-                        />
-                    </div>
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="bg-white shadow-md rounded-lg p-4 max-w-md w-full">
+                <h2 className="text-lg font-bold text-gray-700 text-center mb-4">Create New Room</h2>
+                <form onSubmit={handleSubmit} className="space-y-3">
+                    <TextField
+                        fullWidth
+                        label="Room Name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        variant="outlined"
+                        size="small"
+                    />
 
-                    <div className="space-y-4">
-                        <h2 className="text-xl text-white font-semibold">Videos</h2>
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-600 mb-2">Videos</h3>
                         {formData.videos.map((video, index) => (
-                            <div key={index} className="flex gap-4">
+                            <div key={index} className="flex gap-2 mb-2">
                                 <TextField
-                                    label="Video Title"
+                                    label="Title"
                                     value={video.title}
                                     onChange={(e) => handleInputChange(e, index, 'title')}
                                     variant="outlined"
-                                    className="bg-white rounded-lg text-black shadow-md focus:ring-2 focus:ring-purple-500"
+                                    size="small"
+                                    className="flex-grow"
                                 />
                                 <TextField
-                                    label="Video URL"
+                                    label="URL"
                                     value={video.url}
                                     onChange={(e) => handleInputChange(e, index, 'url')}
                                     variant="outlined"
-                                    className="bg-white rounded-lg text-black shadow-md focus:ring-2 focus:ring-purple-500"
+                                    size="small"
+                                    className="flex-grow"
                                 />
                             </div>
                         ))}
                         <Button
-                            variant="outlined"
                             onClick={addVideo}
-                            className="text-white border-white hover:bg-white hover:text-purple-500 focus:ring-2 focus:ring-purple-500 mt-2"
+                            size="small"
+                            variant="outlined"
+                            className="text-xs"
                         >
-                            Add Video
+                            + Add Video
                         </Button>
                     </div>
 
-                    <div>
+                    <div className="flex gap-2">
                         <TextField
                             fullWidth
                             label="Start Time"
@@ -155,11 +171,8 @@ const CreateRoom = () => {
                             onChange={handleInputChange}
                             InputLabelProps={{ shrink: true }}
                             variant="outlined"
-                            className="bg-white rounded-lg text-black shadow-md focus:ring-2 focus:ring-purple-500"
+                            size="small"
                         />
-                    </div>
-
-                    <div>
                         <TextField
                             fullWidth
                             label="End Time"
@@ -169,33 +182,35 @@ const CreateRoom = () => {
                             onChange={handleInputChange}
                             InputLabelProps={{ shrink: true }}
                             variant="outlined"
-                            className="bg-white rounded-lg text-black shadow-md focus:ring-2 focus:ring-purple-500"
+                            size="small"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="participants" className="text-white font-semibold">
-                            Participants
-                        </label>
-                        <select
-                            name="participants"
-                            value=""
-                            onChange={handleInputChange}
-                            className="w-full mt-2 bg-white text-black p-3 rounded-lg border shadow-md focus:ring-2 focus:ring-purple-500"
+                        <label htmlFor="participants" className="text-sm font-medium text-gray-600">Participants</label>
+                        <Select
+                            multiple
+                            value={formData.participants}
+                            onChange={handleParticipantsChange}
+                            renderValue={(selected) => selected.join(', ')}
+                            fullWidth
+                            className="mt-1 text-sm"
                         >
-                            <option value="">Select Participants</option>
                             {users?.map((user: any) => (
-                                <option key={user.id} value={user.id}>
-                                    {user.username}
-                                </option>
+                                <MenuItem key={user.id} value={user.id}>
+                                    <Checkbox checked={formData.participants.indexOf(user.id) > -1} />
+                                    <ListItemText primary={user.username} />
+                                </MenuItem>
                             ))}
-                        </select>
+                        </Select>
                     </div>
 
                     <Button
                         type="submit"
+                        fullWidth
                         variant="contained"
-                        className="w-full py-3 text-lg font-semibold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-purple-500 focus:ring-2 focus:ring-purple-500"
+                        color="primary"
+                        className="py-2"
                     >
                         Create Room
                     </Button>
