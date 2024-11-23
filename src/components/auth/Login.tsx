@@ -1,20 +1,29 @@
 import React, { useState } from 'react';
-import { Box, Button, Stack, TextField, Typography } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../../redux/store/store.tsx';
-import path from '../../axios/axios.ts';
-import { loginRequest, loginSuccess, loginFailure } from '../../redux/slice/auth/authSlice.ts';
-import Cookies from 'js-cookie';
+import {
+    TextField,
+    Button,
+    Typography,
+    Box,
+    Stack
+} from '@mui/material';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import {
+    loginRequest,
+    loginSuccess,
+    loginFailure
+} from '../../redux/slice/auth/authSlice.ts';
+import path from '../../axios/axios.ts';
+import Cookies from 'js-cookie';
 
-function Login() {
-    const dispatch = useDispatch<AppDispatch>();
+
+const Login: React.FC = () => {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
-
-    const { loading, error } = useSelector((state: RootState) => state.auth);
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
 
@@ -36,9 +45,15 @@ function Login() {
 
         try {
             const response = await path.post('/auth/login', { email, password });
+            console.log(response.data);
+
+            const token = response.data.token;
+
+            Cookies.set('token', token);
+
             dispatch(loginSuccess(response.data));
-            Cookies.set('auth_token', response.data.token, { expires: 7, path: '/' });
-            navigate('/dashboard');
+            navigate('/');
+            navigate('/');
         } catch (err: any) {
             dispatch(loginFailure(err.message));
         }
@@ -51,7 +66,8 @@ function Login() {
                 justifyContent: 'center',
                 alignItems: 'center',
                 minHeight: '100vh',
-                backgroundColor: '#f5f5f5', // Light background color
+                background: 'linear-gradient(to right, #004d40, #00695c)',
+                padding: 2,
             }}
         >
             <Box
@@ -59,12 +75,22 @@ function Login() {
                     width: '100%',
                     maxWidth: 400,
                     p: 4,
-                    borderRadius: 2,
-                    boxShadow: 3,
-                    backgroundColor: 'white',
+                    borderRadius: 3,
+                    boxShadow: 4,
+                    backgroundColor: '#1e2a38',
                 }}
             >
-                <Typography variant="h5" align="center" gutterBottom sx={{ fontWeight: 600 }}>
+                <Typography
+                    variant="h4"
+                    align="center"
+                    gutterBottom
+                    sx={{
+                        fontWeight: 700,
+                        color: '#ffffff',
+                        textTransform: 'uppercase',
+                        letterSpacing: 1.5,
+                    }}
+                >
                     Login
                 </Typography>
 
@@ -79,6 +105,22 @@ function Login() {
                             onChange={(e) => setEmail(e.target.value)}
                             error={!!emailError}
                             helperText={emailError}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '8px',
+                                    backgroundColor: '#263547',
+                                    color: '#ffffff',
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: '#cfd8dc',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#4db6ac',
+                                },
+                                '& .MuiOutlinedInput-root.Mui-focused fieldset': {
+                                    borderColor: '#00acc1',
+                                },
+                            }}
                         />
 
                         <TextField
@@ -90,33 +132,46 @@ function Login() {
                             onChange={(e) => setPassword(e.target.value)}
                             error={!!passwordError}
                             helperText={passwordError}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '8px',
+                                    backgroundColor: '#263547',
+                                    color: '#ffffff',
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: '#cfd8dc',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#4db6ac',
+                                },
+                                '& .MuiOutlinedInput-root.Mui-focused fieldset': {
+                                    borderColor: '#00acc1',
+                                },
+                            }}
                         />
 
                         <Button
                             variant="contained"
                             fullWidth
                             type="submit"
-                            disabled={loading}
                             sx={{
-                                backgroundColor: '#6200ea',
-                                '&:hover': { backgroundColor: '#3700b3' },
+                                borderRadius: '8px',
+                                fontWeight: 600,
                                 padding: '12px 0',
                                 textTransform: 'none',
+                                backgroundColor: '#00acc1',
+                                '&:hover': {
+                                    backgroundColor: '#00838f',
+                                },
                             }}
                         >
-                            {loading ? 'Logging in...' : 'Login'}
+                            Login
                         </Button>
-
-                        {error && (
-                            <Typography variant="body2" color="error" align="center" sx={{ mt: 2 }}>
-                                {error}
-                            </Typography>
-                        )}
                     </Stack>
                 </form>
             </Box>
         </Box>
     );
-}
+};
 
 export default Login;
