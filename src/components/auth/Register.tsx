@@ -65,7 +65,8 @@ const Register: React.FC = () => {
                 justifyContent: 'center',
                 alignItems: 'center',
                 minHeight: '100vh',
-                backgroundColor: '#f5f5f5',
+                background: 'linear-gradient(to right, #004d40, #00695c)',
+                padding: 2,
             }}
         >
             <Box
@@ -73,13 +74,23 @@ const Register: React.FC = () => {
                     width: '100%',
                     maxWidth: 400,
                     p: 4,
-                    borderRadius: 2,
-                    boxShadow: 3,
-                    backgroundColor: 'white',
+                    borderRadius: 3,
+                    boxShadow: 4,
+                    backgroundColor: '#1e2a38',
                 }}
             >
-                <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 700, color: '#333' }}>
-                    Create a New Account
+                <Typography
+                    variant="h4"
+                    align="center"
+                    gutterBottom
+                    sx={{
+                        fontWeight: 700,
+                        color: '#ffffff',
+                        textTransform: 'uppercase',
+                        letterSpacing: 1.5,
+                    }}
+                >
+                    Register
                 </Typography>
 
                 <form onSubmit={handleRegister}>
@@ -95,14 +106,17 @@ const Register: React.FC = () => {
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '8px',
-                                    backgroundColor: '#f7f7f7',
+                                    backgroundColor: '#263547',
+                                    color: '#ffffff',
                                 },
                                 '& .MuiInputLabel-root': {
-                                    fontWeight: 600,
-                                    color: '#555',
+                                    color: '#cfd8dc',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#4db6ac',
                                 },
                                 '& .MuiOutlinedInput-root.Mui-focused fieldset': {
-                                    borderColor: '#4B92FF',
+                                    borderColor: '#00acc1',
                                 },
                             }}
                         />
@@ -119,14 +133,17 @@ const Register: React.FC = () => {
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '8px',
-                                    backgroundColor: '#f7f7f7',
+                                    backgroundColor: '#263547',
+                                    color: '#ffffff',
                                 },
                                 '& .MuiInputLabel-root': {
-                                    fontWeight: 600,
-                                    color: '#555',
+                                    color: '#cfd8dc',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#4db6ac',
                                 },
                                 '& .MuiOutlinedInput-root.Mui-focused fieldset': {
-                                    borderColor: '#4B92FF',
+                                    borderColor: '#00acc1',
                                 },
                             }}
                         />
@@ -143,21 +160,23 @@ const Register: React.FC = () => {
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '8px',
-                                    backgroundColor: '#f7f7f7',
+                                    backgroundColor: '#263547',
+                                    color: '#ffffff',
                                 },
                                 '& .MuiInputLabel-root': {
-                                    fontWeight: 600,
-                                    color: '#555',
+                                    color: '#cfd8dc',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#4db6ac',
                                 },
                                 '& .MuiOutlinedInput-root.Mui-focused fieldset': {
-                                    borderColor: '#4B92FF',
+                                    borderColor: '#00acc1',
                                 },
                             }}
                         />
 
                         <Button
                             variant="contained"
-                            color="primary"
                             fullWidth
                             type="submit"
                             sx={{
@@ -165,9 +184,9 @@ const Register: React.FC = () => {
                                 fontWeight: 600,
                                 padding: '12px 0',
                                 textTransform: 'none',
-                                backgroundColor: '#4B92FF',
+                                backgroundColor: '#00acc1',
                                 '&:hover': {
-                                    backgroundColor: '#3c7acc',
+                                    backgroundColor: '#00838f',
                                 },
                             }}
                         >
