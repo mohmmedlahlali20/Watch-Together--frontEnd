@@ -8,24 +8,23 @@ interface User {
 }
 
 interface UserState {
-    user: User | null;
+    users: User[];
 }
 
 const initialState: UserState = {
-    user: null,
+    users: [],
 };
 
 export const userSlice = createSlice({
-    name: "user",
+    name: "users",
     initialState,
     reducers: {
-        getUser: (state, action: PayloadAction<User>) => {
-            state.user = action.payload;
+        setUsers: (state, action: PayloadAction<User[]>) => {
+            state.users = action.payload;
         },
-
     },
 });
 
-export const { getUser } = userSlice.actions;
+export const { setUsers } = userSlice.actions;
 
 export default userSlice.reducer;
