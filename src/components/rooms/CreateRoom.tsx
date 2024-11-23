@@ -1,65 +1,109 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addRoom } from '../../redux/slice/room/roomSlice.ts';
+import { setUsers } from '../../redux/slice/users/usersSlice.ts';
 import path from '../../axios/axios';
-
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
+import Swal from 'sweetalert2';
 
 const CreateRoom = () => {
     const dispatch = useDispatch();
+    const token = Cookies.get('auth_token');
+    const user = jwtDecode(token);
+    const userId = user.userId;
 
-    // State for form inputs
     const [formData, setFormData] = useState({
-        name: "",
-        owner: "",
-        videos: [{ title: "", url: "" }],
-        startTime: "",
-        endTime: "",
-        participants: [""],
+        name: '',
+        owner: userId,
+        videos: [{ title: '', url: '' }],
+        startTime: '',
+        endTime: '',
+        participants: [],
     });
 
-    // Handle input changes
+    const users = useSelector((state: any) => state.users);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const isValid = formData.videos.every(video => video.title && video.url);
+        if (!isValid) {
+            Swal.fire({
+                title: 'Error!',
+                text: 'Please fill all video fields (title and URL).',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+            return;
+        }
+
+        try {
+            const response = await path.post('/rooms/create', formData);
+            dispatch(addRoom(response.data));
+
+            Swal.fire({
+                title: 'Room Created!',
+                text: 'Your room has been successfully created.',
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+        } catch (error) {
+            console.error('Error creating room:', error);
+
+            Swal.fire({
+                title: 'Error!',
+                text: 'Something went wrong while creating the room.',
+                icon: 'error',
+                confirmButtonText: 'Retry',
+            });
+        }
+    };
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number, field?: string) => {
         const { name, value } = e.target;
 
-        if (name.startsWith("videos") && field !== undefined && index !== undefined) {
+        if (field && typeof index === 'number') {
             const updatedVideos = [...formData.videos];
             updatedVideos[index][field] = value;
             setFormData({ ...formData, videos: updatedVideos });
-        } else if (name === "participants") {
-            setFormData({ ...formData, participants: [value] });
+        } else if (name === 'participants') {
+            setFormData({
+                ...formData,
+                participants: [...formData.participants, value],
+            });
         } else {
             setFormData({ ...formData, [name]: value });
         }
     };
 
-    // Handle form submission
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            const response = await path.post("/rooms", formData);
-            dispatch(addRoom(response.data));
-            alert("Room created successfully!");
-        } catch (error) {
-            console.error("Error creating room:", error);
-        }
-    };
-
-    // Add a new video input
     const addVideo = () => {
         setFormData({
             ...formData,
-            videos: [...formData.videos, { title: "", url: "" }],
+            videos: [...formData.videos, { title: '', url: '' }],
         });
     };
 
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const response = await path.get('/User/Users');
+                dispatch(setUsers(response.data));
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        };
+
+        fetchUsers();
+    }, [dispatch]);
+
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-500 to-indigo-700">
-            <div className="bg-white/30 backdrop-blur-md rounded-xl shadow-lg p-8 max-w-3xl w-full">
-                <h1 className="text-3xl font-bold text-white text-center mb-6">Create a New Room</h1>
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Room Name */}
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-600 to-indigo-900 container mx-auto">
+            <div className="bg-opacity-60 backdrop-blur-md rounded-xl shadow-lg p-8 w-full max-w-3xl">
+                <h1 className="text-4xl font-bold text-white text-center mb-6">Create a New Room</h1>
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <TextField
                             fullWidth
@@ -68,50 +112,39 @@ const CreateRoom = () => {
                             value={formData.name}
                             onChange={handleInputChange}
                             variant="outlined"
-                            className="bg-white rounded-md"
+                            className="bg-white rounded-lg text-black shadow-md focus:ring-2 focus:ring-purple-500"
                         />
                     </div>
 
-                    {/* Owner */}
-                    <div>
-                        <TextField
-                            fullWidth
-                            label="Owner ID"
-                            name="owner"
-                            value={formData.owner}
-                            onChange={handleInputChange}
-                            variant="outlined"
-                            className="bg-white rounded-md"
-                        />
-                    </div>
-
-                    {/* Videos */}
                     <div className="space-y-4">
-                        <h2 className="text-lg font-semibold text-white">Videos</h2>
+                        <h2 className="text-xl text-white font-semibold">Videos</h2>
                         {formData.videos.map((video, index) => (
                             <div key={index} className="flex gap-4">
                                 <TextField
                                     label="Video Title"
                                     value={video.title}
-                                    onChange={(e) => handleInputChange(e, index, "title")}
+                                    onChange={(e) => handleInputChange(e, index, 'title')}
                                     variant="outlined"
-                                    className="bg-white rounded-md"
+                                    className="bg-white rounded-lg text-black shadow-md focus:ring-2 focus:ring-purple-500"
                                 />
                                 <TextField
                                     label="Video URL"
                                     value={video.url}
-                                    onChange={(e) => handleInputChange(e, index, "url")}
+                                    onChange={(e) => handleInputChange(e, index, 'url')}
                                     variant="outlined"
-                                    className="bg-white rounded-md"
+                                    className="bg-white rounded-lg text-black shadow-md focus:ring-2 focus:ring-purple-500"
                                 />
                             </div>
                         ))}
-                        <Button variant="outlined" onClick={addVideo} className="text-white border-white hover:bg-white hover:text-purple-500">
+                        <Button
+                            variant="outlined"
+                            onClick={addVideo}
+                            className="text-white border-white hover:bg-white hover:text-purple-500 focus:ring-2 focus:ring-purple-500 mt-2"
+                        >
                             Add Video
                         </Button>
                     </div>
 
-                    {/* Start Time */}
                     <div>
                         <TextField
                             fullWidth
@@ -122,11 +155,10 @@ const CreateRoom = () => {
                             onChange={handleInputChange}
                             InputLabelProps={{ shrink: true }}
                             variant="outlined"
-                            className="bg-white rounded-md"
+                            className="bg-white rounded-lg text-black shadow-md focus:ring-2 focus:ring-purple-500"
                         />
                     </div>
 
-                    {/* End Time */}
                     <div>
                         <TextField
                             fullWidth
@@ -137,27 +169,33 @@ const CreateRoom = () => {
                             onChange={handleInputChange}
                             InputLabelProps={{ shrink: true }}
                             variant="outlined"
-                            className="bg-white rounded-md"
+                            className="bg-white rounded-lg text-black shadow-md focus:ring-2 focus:ring-purple-500"
                         />
                     </div>
 
-                    {/* Participants */}
                     <div>
-                        <TextField
-                            fullWidth
-                            label="Participants (Comma-separated User IDs)"
+                        <label htmlFor="participants" className="text-white font-semibold">
+                            Participants
+                        </label>
+                        <select
                             name="participants"
-                            value={formData.participants.join(",")}
+                            value=""
                             onChange={handleInputChange}
-                            variant="outlined"
-                            className="bg-white rounded-md"
-                        />
+                            className="w-full mt-2 bg-white text-black p-3 rounded-lg border shadow-md focus:ring-2 focus:ring-purple-500"
+                        >
+                            <option value="">Select Participants</option>
+                            {users?.map((user: any) => (
+                                <option key={user.id} value={user.id}>
+                                    {user.username}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <Button
                         type="submit"
                         variant="contained"
-                        className="w-full py-3 text-lg font-semibold bg-gradient-to-r from-purple-500 to-indigo-700 text-white hover:from-indigo-700 hover:to-purple-500"
+                        className="w-full py-3 text-lg font-semibold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-purple-500 focus:ring-2 focus:ring-purple-500"
                     >
                         Create Room
                     </Button>
@@ -168,4 +206,3 @@ const CreateRoom = () => {
 };
 
 export default CreateRoom;
-
