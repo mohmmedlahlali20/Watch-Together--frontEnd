@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { addRoom } from '../../redux/slice/room/roomSlice.ts';
-import { setUsers } from '../../redux/slice/users/usersSlice.ts';
 import path from '../../axios/axios';
 import Cookies from 'js-cookie';
-import { jwtDecode } from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 import Swal from 'sweetalert2';
-import { Select, MenuItem, Checkbox, ListItemText } from '@mui/material';
+import { Select, MenuItem, Checkbox, ListItemText, Dialog, DialogContent, DialogActions } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 
 const CreateRoom = () => {
     const dispatch = useDispatch();
-    const token = Cookies.get('token');
-    const user = jwtDecode(token);
+    const token = Cookies.get('token')!;
+    const user = jwtDecode<{ userId: string }>(token);
     const userId = user.userId;
 
     const [formData, setFormData] = useState({
@@ -26,25 +25,11 @@ const CreateRoom = () => {
         participants: [],
     });
 
-    const users = useSelector((state: any) => state.users);
+    const [users, setUsers] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        const isValid = formData.videos.every(video => {
-            const urlPattern = /^(https?:\/\/[^\s$.?#].[^\s]*)$/;
-            return video.title && urlPattern.test(video.url);
-        });
-
-        if (!isValid) {
-            Swal.fire({
-                title: 'Error!',
-                text: 'Please fill all video fields (title and URL) with valid information.',
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-            return;
-        }
 
         try {
             const response = await path.post('/rooms/create', formData);
@@ -56,6 +41,18 @@ const CreateRoom = () => {
                 icon: 'success',
                 confirmButtonText: 'OK',
             });
+
+            // Reset the form
+            setFormData({
+                name: '',
+                owner: userId,
+                videos: [{ title: '', url: '' }],
+                startTime: '',
+                endTime: '',
+                participants: [],
+            });
+
+            setIsModalOpen(false);
         } catch (error) {
             console.error('Error creating room:', error);
 
@@ -75,11 +72,6 @@ const CreateRoom = () => {
             const updatedVideos = [...formData.videos];
             updatedVideos[index][field] = value;
             setFormData({ ...formData, videos: updatedVideos });
-        } else if (name === 'participants') {
-            setFormData({
-                ...formData,
-                participants: [...formData.participants, value],
-            });
         } else {
             setFormData({ ...formData, [name]: value });
         }
@@ -92,12 +84,16 @@ const CreateRoom = () => {
         });
     };
 
-    const handleParticipantsChange = (e: SelectChangeEvent<typeof formData.participants>) => {
-        const { target: { value } } = e;
+    const handleParticipantsChange = (e: SelectChangeEvent<string[]>) => {
+        const { value } = e.target;
         setFormData({
             ...formData,
             participants: typeof value === 'string' ? value.split(',') : value,
         });
+    };
+
+    const toggleModal = () => {
+        setIsModalOpen(!isModalOpen);
     };
 
     useEffect(() => {
@@ -105,117 +101,124 @@ const CreateRoom = () => {
             try {
                 const response = await path.get('/User/Users');
                 setUsers(response.data);
-                dispatch(setUsers(response.data));
             } catch (error) {
                 console.error('Error fetching users:', error);
             }
         };
 
         fetchUsers();
-    }, [dispatch]);
+    }, []);
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-50">
-            <div className="bg-white shadow-md rounded-lg p-4 max-w-md w-full">
-                <h2 className="text-lg font-bold text-gray-700 text-center mb-4">Create New Room</h2>
-                <form onSubmit={handleSubmit} className="space-y-3">
-                    <TextField
-                        fullWidth
-                        label="Room Name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        variant="outlined"
-                        size="small"
-                    />
+        <div>
+            {/* Button to open the modal */}
+            <Button variant="contained" color="primary" onClick={toggleModal}>
+                Create New Room
+            </Button>
 
-                    <div>
-                        <h3 className="text-sm font-semibold text-gray-600 mb-2">Videos</h3>
-                        {formData.videos.map((video, index) => (
-                            <div key={index} className="flex gap-2 mb-2">
-                                <TextField
-                                    label="Title"
-                                    value={video.title}
-                                    onChange={(e) => handleInputChange(e, index, 'title')}
-                                    variant="outlined"
-                                    size="small"
-                                    className="flex-grow"
-                                />
-                                <TextField
-                                    label="URL"
-                                    value={video.url}
-                                    onChange={(e) => handleInputChange(e, index, 'url')}
-                                    variant="outlined"
-                                    size="small"
-                                    className="flex-grow"
-                                />
-                            </div>
-                        ))}
-                        <Button
-                            onClick={addVideo}
-                            size="small"
-                            variant="outlined"
-                            className="text-xs"
-                        >
-                            + Add Video
-                        </Button>
-                    </div>
-
-                    <div className="flex gap-2">
+            {/* Modal */}
+            <Dialog open={isModalOpen} onClose={toggleModal} fullWidth maxWidth="sm">
+                <DialogContent>
+                    <h2 className="text-lg font-bold text-gray-700 text-center mb-4">Create New Room</h2>
+                    <form onSubmit={handleSubmit} className="space-y-3">
                         <TextField
                             fullWidth
-                            label="Start Time"
-                            name="startTime"
-                            type="datetime-local"
-                            value={formData.startTime}
+                            label="Room Name"
+                            name="name"
+                            value={formData.name}
                             onChange={handleInputChange}
-                            InputLabelProps={{ shrink: true }}
                             variant="outlined"
                             size="small"
                         />
-                        <TextField
-                            fullWidth
-                            label="End Time"
-                            name="endTime"
-                            type="datetime-local"
-                            value={formData.endTime}
-                            onChange={handleInputChange}
-                            InputLabelProps={{ shrink: true }}
-                            variant="outlined"
-                            size="small"
-                        />
-                    </div>
 
-                    <div>
-                        <label htmlFor="participants" className="text-sm font-medium text-gray-600">Participants</label>
-                        <Select
-                            multiple
-                            value={formData.participants}
-                            onChange={handleParticipantsChange}
-                            renderValue={(selected) => selected.join(', ')}
-                            fullWidth
-                            className="mt-1 text-sm"
-                        >
-                            {users?.map((user: any) => (
-                                <MenuItem key={user.id} value={user.id}>
-                                    <Checkbox checked={formData.participants.indexOf(user.id) > -1} />
-                                    <ListItemText primary={user.username} />
-                                </MenuItem>
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-600 mb-2">Videos</h3>
+                            {formData.videos.map((video, index) => (
+                                <div key={index} className="flex gap-2 mb-2">
+                                    <TextField
+                                        label="Title"
+                                        value={video.title}
+                                        onChange={(e) => handleInputChange(e, index, 'title')}
+                                        variant="outlined"
+                                        size="small"
+                                        className="flex-grow"
+                                    />
+                                    <TextField
+                                        label="URL"
+                                        value={video.url}
+                                        onChange={(e) => handleInputChange(e, index, 'url')}
+                                        variant="outlined"
+                                        size="small"
+                                        className="flex-grow"
+                                    />
+                                </div>
                             ))}
-                        </Select>
-                    </div>
+                            <Button
+                                onClick={addVideo}
+                                size="small"
+                                variant="outlined"
+                                className="text-xs"
+                            >
+                                + Add Video
+                            </Button>
+                        </div>
 
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        color="primary"
-                        className="py-2"
-                    >
+                        <div className="flex gap-2">
+                            <TextField
+                                fullWidth
+                                label="Start Time"
+                                name="startTime"
+                                type="datetime-local"
+                                value={formData.startTime}
+                                onChange={handleInputChange}
+                                InputLabelProps={{ shrink: true }}
+                                variant="outlined"
+                                size="small"
+                            />
+                            <TextField
+                                fullWidth
+                                label="End Time"
+                                name="endTime"
+                                type="datetime-local"
+                                value={formData.endTime}
+                                onChange={handleInputChange}
+                                InputLabelProps={{ shrink: true }}
+                                variant="outlined"
+                                size="small"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="participants" className="text-sm font-medium text-gray-600">
+                                Participants
+                            </label>
+                            <Select
+                                multiple
+                                value={formData.participants}
+                                onChange={handleParticipantsChange}
+                                renderValue={(selected) => selected.join(', ')}
+                                fullWidth
+                                className="mt-1 text-sm"
+                            >
+                                {users?.map((user: any) => (
+                                    <MenuItem key={user._id} value={user.username}>
+                                        <Checkbox checked={formData.participants.indexOf(user._id) > -1} />
+                                        <ListItemText primary={user.username} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </div>
+                    </form>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={toggleModal} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button type="submit" variant="contained" color="primary" onClick={handleSubmit}>
                         Create Room
                     </Button>
-                </form>
-            </div>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };
